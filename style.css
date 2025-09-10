@@ -1,26 +1,27 @@
-/* animasi background gradasi */
-body {
-  background: linear-gradient(270deg, var(--bg-start), var(--bg-end), #ff8fab, #ffb84d);
-  background-size: 800% 800%;
-  animation: bgFlow 18s ease infinite;
-}
+<style>
+  /* background animate */
+  body {
+    background: linear-gradient(270deg, #ff6ea1, #ff9b51, #ff6ea1);
+    background-size: 600% 600%;
+    animation: bgShift 12s ease infinite;
+  }
+  @keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 
-@keyframes bgFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+  /* shake animation for CTA button */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
 
-/* tombol "Buat link anonim kamu" shake */
-#makeLink {
-  animation: shakeBtn 2.8s ease-in-out infinite;
-}
-
-@keyframes shakeBtn {
-  0%, 100% { transform: translateX(0) rotate(0); }
-  10% { transform: translateX(-3px) rotate(-1deg); }
-  20% { transform: translateX(3px) rotate(1deg); }
-  30% { transform: translateX(-2px) rotate(-1deg); }
-  40% { transform: translateX(2px) rotate(1deg); }
-  50% { transform: translateX(0) rotate(0); }
-}
+  #makeLink {
+    animation: shake 1s ease-in-out infinite;
+    animation-delay: 3s; /* biar ga langsung */
+  }
+</style>
