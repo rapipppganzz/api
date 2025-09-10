@@ -1,1 +1,202 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ngl.link — clone (mirip)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg-start:#ff6ea1;
+      --bg-end:#ff9b51;
+    }
+    body{
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(135deg,var(--bg-start),var(--bg-end));
+      margin:0;
+    }
+    /* card pop */
+    @keyframes cardPop {
+      0% { transform: translateY(18px) scale(.995); opacity: 0; }
+      60% { transform: translateY(-6px) scale(1.006); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    /* breathe anim */
+    @keyframes breathe {
+      0%{ transform: translateY(0) }
+      50%{ transform: translateY(-6px) }
+      100%{ transform: translateY(0) }
+    }
+    .card {
+      animation: cardPop .7s cubic-bezier(.2,.9,.2,1) both;
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 18px 40px rgba(10,10,10,0.18);
+      overflow: hidden;
+    }
+    .ngl-textarea {
+      border-radius: 16px;
+      border: 1px solid rgba(15,15,15,0.06);
+      background: #fafafa;
+      transition: box-shadow .18s, transform .12s;
+    }
+    .ngl-textarea:focus {
+      outline: none;
+      box-shadow: 0 8px 30px rgba(255,77,148,0.12);
+      transform: translateY(-3px);
+    }
+    .bubble {
+      background: #f3f3f3;
+      color: #111;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateX(12px);
+      animation: msgIn .4s ease forwards;
+    }
+    @keyframes msgIn {
+      0% { transform: translateX(20px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-sm">
+    <!-- activity pill -->
+    <div class="flex justify-center mb-6">
+      <div class="bg-white/30 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-semibold shadow animate-[breathe_4s_ease-in-out_infinite]">
+        🔥 205 teman baru saja mengetuk
+      </div>
+    </div>
 
+    <!-- main card -->
+    <div class="card">
+      <!-- header -->
+      <div class="flex items-center gap-4 px-5 py-4 border-b">
+        <div class="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
+          <img src="https://storage.googleapis.com/a1aa/image/5df75832-9f76-4ece-e6f3-683fd17d55b0.jpg"
+               alt="avatar" class="w-10 h-10 rounded-full object-cover"/>
+        </div>
+        <div class="flex-1">
+          <div class="text-gray-900 font-semibold text-sm">@bibd51254</div>
+          <div class="text-gray-500 text-xs">kirimi aku pesan anonim</div>
+        </div>
+      </div>
+
+      <!-- main area -->
+      <div class="px-5 py-6">
+        <div class="mb-3 text-pink-600 font-bold text-lg">lagi ngapain nanti?</div>
+        <div class="text-sm text-gray-500 mb-4">kirim yang jujur ya — 100% anonim</div>
+
+        <textarea id="msg" class="ngl-textarea w-full h-32 p-4 resize-none" placeholder="Ketik pesan anonimmu di sini..."></textarea>
+
+        <div class="mt-4 flex items-center justify-between">
+          <button id="dice" class="w-10 h-10 rounded-full bg-pink-50 flex items-center justify-center ring-1 ring-pink-100">
+            🎲
+          </button>
+          <button id="sendBtn" class="bg-black text-white px-5 py-3 rounded-full font-semibold shadow-md hover:scale-[1.02] transition">
+            Send!
+          </button>
+        </div>
+      </div>
+
+      <!-- footer -->
+      <div class="px-5 py-4 border-t flex items-center justify-between text-xs text-gray-500">
+        <span>🔒 100% anonymous Q&amp;A</span>
+        <span id="createLink" class="text-pink-500 font-semibold cursor-pointer">Buat linkmu</span>
+      </div>
+    </div>
+
+    <!-- recent -->
+    <div id="recentArea" class="mt-6 space-y-3"></div>
+
+    <!-- CTA -->
+    <div class="mt-8 text-center text-white">
+      <div class="text-lg font-semibold">👇 Dapatkan pesan untukmu sendiri 👇</div>
+      <button id="makeLink" class="mt-3 bg-black text-white font-bold px-6 py-3 rounded-full shadow-lg hover:bg-gray-900 transition">Buat link anonim kamu</button>
+    </div>
+  </div>
+
+  <script>
+    const recent = [
+      "hah kocak banget, asli",
+      "kapan kita nongkrong lagi?",
+      "beneran ganteng sih",
+      "ngapain nih malem-malem",
+      "jawab dong jujur 😏",
+    ];
+    const recentArea = document.getElementById('recentArea');
+
+    function showRecent() {
+      recentArea.innerHTML = '';
+      recent.forEach((text, i) => {
+        setTimeout(() => {
+          const wrap = document.createElement('div');
+          wrap.className = 'flex items-center gap-3';
+          wrap.style.animationDelay = (i * 120) + 'ms';
+          const avatar = document.createElement('div');
+          avatar.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center';
+          avatar.innerHTML = '<img src="https://picsum.photos/seed/'+(i+5)+'/48" class="w-7 h-7 rounded-full object-cover"/>';
+          const bubble = document.createElement('div');
+          bubble.className = 'bubble';
+          bubble.textContent = text;
+          wrap.appendChild(avatar);
+          wrap.appendChild(bubble);
+          recentArea.prepend(wrap);
+          setTimeout(()=> {
+            wrap.style.opacity = '0';
+            wrap.style.transform = 'translateX(18px)';
+            setTimeout(()=> wrap.remove(), 600);
+          }, 4000 + (i*200));
+        }, i * 700);
+      });
+    }
+    setTimeout(()=> showRecent(), 900);
+
+    document.getElementById('dice').addEventListener('click', ()=> {
+      const ta = document.getElementById('msg');
+      const choices = [
+        "Kamu siapa sebenarnya?",
+        "Kenapa kamu ga balas chat aku?",
+        "Yg paling bikin malu waktu kecil apa?",
+        "Beneran suka dia atau masih galau?",
+        "Ceritain moment paling awkwardmu"
+      ];
+      ta.value = choices[Math.floor(Math.random()*choices.length)];
+      ta.focus();
+    });
+
+    const sendBtn = document.getElementById('sendBtn');
+    sendBtn.addEventListener('click', ()=> {
+      sendBtn.disabled = true;
+      const old = sendBtn.innerHTML;
+      sendBtn.innerHTML = 'Sending...';
+      setTimeout(()=> {
+        sendBtn.innerHTML = old;
+        sendBtn.disabled = false;
+        const wrap = document.createElement('div');
+        wrap.className = 'flex items-center gap-3';
+        const avatar = document.createElement('div');
+        avatar.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center';
+        avatar.innerHTML = '<img src="https://picsum.photos/seed/sent/48" class="w-7 h-7 rounded-full object-cover"/>';
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = 'Pesan terkirim — terima kasih ❤️';
+        wrap.appendChild(avatar);
+        wrap.appendChild(bubble);
+        recentArea.prepend(wrap);
+      }, 1000);
+    });
+
+    document.getElementById('createLink').addEventListener('click', ()=> {
+      alert('Demo fitur buat link!');
+    });
+    document.getElementById('makeLink').addEventListener('click', ()=> {
+      alert('Link berhasil dibuat (demo)');
+    });
+  </script>
+</body>
+</html>
