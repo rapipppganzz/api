@@ -438,4 +438,87 @@
     });
   </script>
 </body>
+</html>onst sendBtn = document.getElementById('sendBtn');
+    sendBtn.addEventListener('click', (e)=> {
+      createRipple(e, sendBtn);
+      // fake sending animation
+      sendBtn.disabled = true;
+      const old = sendBtn.innerHTML;
+      sendBtn.innerHTML = 'Sending...';
+      sendBtn.style.opacity = '0.92';
+      setTimeout(()=> {
+        // success micro animation
+        sendBtn.innerHTML = 'Sent ✔';
+        sendBtn.style.transform = 'scale(1.04)';
+        setTimeout(()=> {
+          sendBtn.innerHTML = old;
+          sendBtn.style.transform = '';
+          sendBtn.disabled = false;
+        }, 900);
+        // show confirmation bubble
+        const wrap = document.createElement('div');
+        wrap.className = 'flex items-center gap-3';
+        const avatar = document.createElement('div');
+        avatar.className = 'w-9 h-9 rounded-full bg-white flex items-center justify-center';
+        avatar.innerHTML = '<img src="https://picsum.photos/seed/sent/48" class="w-8 h-8 rounded-full object-cover"/>';
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = 'Pesan terkirim — terima kasih ❤️';
+        wrap.appendChild(avatar);
+        wrap.appendChild(bubble);
+        recentArea.prepend(wrap);
+        // small confetti lite (DOM)
+        tinyConfetti();
+      }, 900);
+    });
+
+    // createLink & makeLink hooks (fake)
+    document.getElementById('createLink').addEventListener('click', ()=> {
+      alert('Fitur pembuatan link (demo): https://ngl.link/yourname (demo)');
+    });
+    document.getElementById('makeLink').addEventListener('click', ()=> {
+      alert('Link berhasil dibuat (demo): https://ngl.link/bibd51254');
+    });
+
+    // tiny confetti (simple)
+    function tinyConfetti(){
+      for(let i=0;i<12;i++){
+        const c = document.createElement('div');
+        const size = (Math.random()*7)+6;
+        c.style.width = c.style.height = size+'px';
+        c.style.position='fixed';
+        c.style.left = (window.innerWidth/2 - 30 + (Math.random()*80-40))+'px';
+        c.style.top = (window.innerHeight/2 - 40 + (Math.random()*80-40))+'px';
+        c.style.background = ['#ff6ea1','#ffb86b','#ffd76b','#ff5288'][Math.floor(Math.random()*4)];
+        c.style.opacity = '0.95';
+        c.style.borderRadius = (Math.random()>0.5? '4px' : '50%');
+        c.style.transform = 'translateY(0) rotate('+Math.random()*360+'deg)';
+        c.style.zIndex = 9999;
+        document.body.appendChild(c);
+        const dx = (Math.random()*200 - 100);
+        const dy = (Math.random()*200 + 80);
+        c.animate([
+          { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+          { transform: `translate(${dx}px, ${dy}px) rotate(${Math.random()*540}deg)`, opacity: 0 }
+        ], {
+          duration: 900 + Math.random()*700,
+          easing: 'cubic-bezier(.2,.8,.2,1)'
+        });
+        setTimeout(()=> c.remove(), 1600);
+      }
+    }
+
+    // keyboard "Enter" send (Ctrl+Enter)
+    document.getElementById('msg').addEventListener('keydown', (ev)=>{
+      if(ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)){
+        sendBtn.click();
+      }
+    });
+
+    // subtle breathing of the top activity pill
+    document.querySelectorAll('.activity').forEach(el=>{
+      el.style.animation = 'breathe 4.2s ease-in-out infinite';
+    });
+  </script>
+</body>
 </html>
