@@ -1,136 +1,26 @@
-/* Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Inter', sans-serif;
-}
-
+/* animasi background gradasi */
 body {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #ec4899, #f97316);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  background: linear-gradient(270deg, var(--bg-start), var(--bg-end), #ff8fab, #ffb84d);
+  background-size: 800% 800%;
+  animation: bgFlow 18s ease infinite;
 }
 
-.container {
-  max-width: 400px;
-  width: 100%;
-  text-align: center;
+@keyframes bgFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-.card {
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-  margin-bottom: 20px;
+/* tombol "Buat link anonim kamu" shake */
+#makeLink {
+  animation: shakeBtn 2.8s ease-in-out infinite;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px;
-}
-
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #ddd;
-}
-
-.username {
-  font-weight: bold;
-  color: #111;
-}
-
-.desc {
-  font-size: 14px;
-  color: #555;
-}
-
-.message {
-  background: rgba(236, 72, 153, 0.2);
-  color: #be185d;
-  padding: 30px;
-  position: relative;
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
-}
-
-.dice {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: rgba(236, 72, 153, 0.3);
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  font-size: 18px;
-}
-
-.footer {
-  color: white;
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
-.btn {
-  width: 100%;
-  background: black;
-  color: white;
-  font-weight: bold;
-  padding: 15px;
-  border: none;
-  border-radius: 999px;
-  margin: 10px 0;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.btn:hover {
-  transform: scale(1.05);
-}
-
-.friends {
-  margin: 20px 0 10px;
-  color: white;
-  font-weight: bold;
-}
-
-.links {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 15px;
-}
-
-.links a {
-  color: #fbcfe8;
-  font-size: 14px;
-  text-decoration: none;
-}
-
-.links a:hover {
-  text-decoration: underline;
-}
-
-/* Animasi */
-.fade-in {
-  opacity: 0;
-  transform: translateY(30px);
-  animation: fadeIn 0.8s ease forwards;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes shakeBtn {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  10% { transform: translateX(-3px) rotate(-1deg); }
+  20% { transform: translateX(3px) rotate(1deg); }
+  30% { transform: translateX(-2px) rotate(-1deg); }
+  40% { transform: translateX(2px) rotate(1deg); }
+  50% { transform: translateX(0) rotate(0); }
 }
